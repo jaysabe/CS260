@@ -1,0 +1,484 @@
+================================================================================
+========================================================= Overview and Objective 
+
+For this assignment you will write a program that reads in the data for
+individual colonists and adds them to a hashtable. The program will then run
+hundreds of searches to ensure that the hashtable response time is fast
+enough. The program is trying to demonstrate a fast and efficient way of
+handling the large list of colonists. You can read background.txt if you want
+more context for why we are doing this.
+
+The objective of this assignment is to learn how to implement and use a
+hashtable. Since this is the objective, you cannot use a premade hashtable
+(e.g. the STL map class). A secondary objective is to become more familiar
+with using char* to represent string data. You cannot use std::string to
+represent the strings.
+
+Your program will be evaluated based on both how it runs as well as how it was
+designed and coded. Pay attention to the "rubric.txt" file to see how it will
+be evaluated.
+
+Along with these instructions, I have provided data files and the EXACT
+expected output that corresponds to those data files. It is important that
+your program output matches EXACTLY. This includes spelling, whitespace, and
+punctuation.
+
+The rest of this document provides more details about the assignment. If you
+have any questions, be sure to post in the discussion group or send me
+email. Do not wait until the last minute to start this assignment.
+
+================================================================================
+======================================================================== Details 
+
+The main concept of this program is to create a class that can manage the list
+of personnel and do it quickly. Managing this list means that we need to be
+able to add and remove people from the list. We also need to be able to look
+people up. The entire program should be optimized for lookups. To do this, we
+will ultimately be storing the data in a hashtable. However, the hashtable
+data structure will not be exposed to the main program. The hashtable will be
+used by other classes internally as the data storage.
+
+The main loop of the program reads and processes data from a data file. The
+data file data is in three sections. The first section is data about
+individuals that need to be added to the system. This list represents all the
+colonists that were on the original ship manifests. The second part of the
+data file is a list of colonists that need to be removed from the
+system. Sadly, these are the ones that have died on the journey. The third
+part of the data is a list of IDs for exercising the lookup
+functionality. This last bit of data is just there for testing the system to
+make sure it is fast enough.
+
+The main() function in the personnel.cpp file processes all the data in the
+file and you don't have to do any of that processing. 
+
+Structurally, the program consists of the main() function and classes as
+described here:
+
+main() -- this function creates a PersonMgr, makes requests to add people to
+the systemn, make requests to remove people from the system, and performs a
+bunch of lookups.
+
+PersonMgr -- this class manages the personnel list. It knows how to add new
+people to the system, remove people from the system, and lookup people in the
+system.
+
+Hashtable -- this class is used by the PersonMgr to store all the people. It
+is a hashtable so it allows quick lookups.
+
+LinkedList -- this class is used by the hashtable for the chaining feature of
+the hashtable.
+
+Person -- this class contains the data for a single person. The data is the
+person's ID, first name, last name, and family id.
+
+Here is an overview of how the main() function and classes relate to each
+other.
+
+main() 		--- calls methods on ---> 	   PersonMgr, Person
+PersonMgr 	--- contains --->    		   Hashtable
+Hashtable 	--- contains --->    		   LinkedList (array of LinkedLists)
+LinkedList 	--- contains ---> 		   Person
+Person		--- contains ---> 		   person data
+
+The following sections provides details about the requirements for the
+assignment.
+
+------------------------------------------------------------------ personnel.cpp
+
+The personnel.cpp file contains the main application for your program. This
+code is meant to read in personnel data (from the provided data file), insert
+the data into the system, remove data from the system, and then perform
+several lookups. The purpose it to exercise the PersonMgr to ensure that it
+will work fast enough.
+
+The code in personnel.cpp interacts with the PersonMgr class and the Person
+class.
+
+For the PersonMgr class, it creates a PersonMgr object, calls addPerson(),
+calls removePerson(), and calls findPerson(). Your implementation of PersonMgr
+will need to have each of these methods.
+
+For the Person class, the main() method creates a Person object and then
+passes that object to the PersonMgr::addPerson method. Also, while doing
+lookups, it receives a pointer to a Person object by calling
+PersonMgr::findPerson() and then calls either operator<<() or print() on the
+object pointed to by that pointer. Your Person class will need to implement
+operator<<() or print(). It is your choice (see the details under the Person
+class description).
+
+You should use the personnel.cpp code either unchanged or with the one change
+of changing operator<<() for print().
+
+
+------------------------------------------------------------------------- Person
+
+The Person class encapsulates information about a single person. This includes
+the person's ID, first name, last name, and family ID. Each of these fields is
+a string which should be implemented as a char* data type (do not use
+std::string). This char* variable should be dynamically allocated. You cannot
+use fixed size character arrays for this.
+
+The main() function makes a call to a Person constructor that contains each of
+those four items of data so you will need to have a Person class constructor
+that takes all those arguments. Since this class has pointer data members, you
+will also need to handle the copy constructor and assignment operator.
+
+The Person class should have a way to print itself. The most common way to do
+this in C++ is to provider operator<< for the Person class but this isn't
+necessary. You could simply provide a print() method. If you use the print()
+method instead of operator<<, you will need to adjust personnel.cpp for this
+by changing the commented out code. This is the only change that it allowed in
+personnel.cpp.
+
+---------------------------------------------------------------------- PersonMgr
+
+The "person manager" is an interesting class. It handles managing person
+objects so that the main program (personnel.cpp) doesn't have to. For this
+program, the PersonMgr keeps a hashtable of all the person objects. The main
+program creates a PersonMgr object using a default constructor and then it
+calls three methods: addPerson(), removePerson(), lookup().
+
+The addPerson() method is called from the main program when adding a person
+for the PersonMgr class to manage. The PersonMgr class should add this person
+object to it's internal data structure (Hashtable).
+
+The removePerson() method is called from the main program when a person needs
+to be removed from the PersonMgr. The PersonMgr class should remove this
+person from the Hashtable.
+
+The findPerson() method is given an ID and should lookup that ID in the
+PersonMgr's internal data structure (Hashtable). The method should return a
+pointer to the Person object that it finds. This returns a pointer to the
+actual object in the Hashtable, not a copy of that object.
+
+Frequently students ask me why there is a class like PersonMgr. Why doesn't
+the main application just use the Hashtable directly. The answer is that the
+PersonMgr class acts as an abstraction for the "business logic" of handling
+persons. In our case PersonMgr simply stores, removes, and retrieves Persons
+in a database. However, consider if there was a more significant function
+required. What if we also needed a separate count or list of persons for each
+family (linked by familyID). Or, maybe we need to randomly select some
+individuals for additional screening. Or, we have a "VIP list" and we need to
+check colonists against that list as we add them to the database. These are
+all additional functions that the main application doesn't need to worry
+about. In all cases the main application just passes a Person to the PersonMgr
+and the PersonMgr would handle the special functions. To be clear, the
+application for this assignment doesn't do an of these extra functions, I'm
+just pointing out why we have this software architecture with a PersonMgr
+class.
+
+---------------------------------------------------------------------- Hashtable
+
+The PersonMgr class should have a Hashtable data member and this Hashtable
+object should hold Person objects. The basic structure of a Hashtable is that
+it contains an array of entries and you find the index of each entry by using
+a hash function to map a key to an index. If multiple keys hash to the same
+index then this is a collision. Your Hashtable implementation must use the
+chaining technique for dealing with collisions. The Hashtable should have
+methods for isEmpty, insert, remove, and lookup.
+
+The key to Hashtable performance is having a good hash function. This
+assignment doesn't proscribe any particular hash function but there are
+performance requirements (see rubric.txt).
+
+Since the Hashtable must use chaining to handle collisions, you will need a
+linked list. Also, your array of entries will be an array of LinkedList
+objects. Each of these objects initially starts out empty.
+
+The process of adding a new entry to the Hashtable is this:
+
+1) use the hash function on the ID to get the index in the array
+2) call the "add" method on the linked list object at that location in the
+array
+
+The process of removing an entry from the Hashtable is this:
+
+1) use the hash function on the ID to get the index in the array
+2) call the "remove" method on the linked list object at that location in the
+array
+
+The process of finding an entry in the Hashtable is this:
+
+1) use the hash function on the ID to get the index in the array
+2) call the "find" method on the linked list object at that location in the
+array
+
+The array in the Hashtable class should be dynamically allocated. You should
+allocate it to a size of 9973 entries.
+
+--------------------------------------------------------------------- LinkedList
+
+As mentioned several times above, the Hashtable relies on a LinkedList. You
+are free to use either a singly-linked or a doubly-linked list and with or
+without a tail pointer. Any of those types would work. The data in the linked
+list should be a Person object. For the purposes of a Hashtable, the items in
+the LinkedList can be in any order. The LinkedList class only needs to
+support add, remove, and find (and constructors, destructors, assignment
+operators, etc.).
+
+-------------------------------------------------------------------- Other Files
+
+I have provided test programs as well. These test programs will most likely
+not work with your classes out-of-the-box. I only provide them to give you a
+rough example of how you can write small test programs for your classes.
+
+You are not required to use the test programs but I highly recommend it. You
+should not turn in the test programs. I will not evaluate or grade them.
+
+--------------------------------------------------------------------- Data Files
+
+The data files for this project are a little more complex than in the previous
+projects. Each data file has three sections. The first section contains
+personnel records in this form:
+
+MC00LXG9J Temperance Grace FAM00YRJ2K
+
+This is the person ID, first name, last name, and family ID. After the
+personnel records there is a separator like this:
+
+======= ======= ======= =======
+
+The second section contains a list of IDs. Each ID will be removed from the
+PersonMgr.
+
+This section ends with a separator:
+
+=======
+
+The remaining entries in the data file are person IDs. These are used to
+exercise the lookup function.
+
+This data file format is handled properly by the provided personnel.cpp
+file. If you want to make your own data files, you will need to follow this
+format.
+
+================================================================================
+========================================================================== Tasks
+
+In this section I outline the sequence of tasks that you should do to complete
+this project. After each task (except the first one) you should be able to
+compile and run your program. Also, at each task step, you should use valgrind
+to make sure that you don't have any memory errors or leaks.
+
+To help you pace yourself, I've added estimates of about how long I think each
+of these tasks takes an average student.
+
+Task 1: Read and Understand (1 hr)
+
+    You should read (and understand) each of the documents in this assignment:
+
+    - instructions.txt (this document)
+    - background.txt
+    - rubric.txt
+
+    You should read the "personnel.cpp" file to see how it works.
+
+    You should examine medium.txt to see what the data is like in the
+    datafile.
+
+    You should look at medium.txt.out to familiarize yourself with the output
+    format.
+
+Task 2: Create the Person class (1 hr)
+
+    Create a new class (separate header and implementation files) for
+    Person. The details for this class are described above. Note that since
+    this class contains pointer data (all the strings), you will have to
+    provide a destructor. You will also have to implement or delete (using the
+    delete keyword) the copy constructor and assignment operator.
+
+    At this point you still won't be able to compile the entire program
+    because personnel.cpp needs PersonMgr. This would be a good time to modify
+    and use testperson.cpp.
+
+Task 3: Create the PersonMgr class stub (1 hr)
+
+    The main objective of this task is to get the main program to build. It
+    won't do anything yet but it will provide a foundation for building on.
+     
+    Create a new class for PersonMgr. The details for this class are described
+    above. Since you haven't created the Hashtable class yet, you can't add
+    that data member to the class. At this point you should just create stub
+    methods for the required methods.
+
+    Now you should be able to compile the whole program without
+    errors. Running the program with one of the data files will not do
+    anything useful but you can do this anyway to make sure that there aren't
+    any memory errors or leaks (using valgrind).
+
+Task 4: Create the LinkedList class (3 hr)
+
+    Create a LinkedList class definition with the following methods in the
+    header file:
+
+    - default constructor
+    - copy constructor
+    - destructor
+    - operator=
+    - add
+    - remove
+    - find
+
+    Define the node for your LinkedList so that it has two data members: a
+    Person data object and a next pointer (if you are are creating a
+    doubly-linked list then also add a prev pointer).
+
+    Define the head for your LinkedList class:
+
+      Node* head
+
+    If you are using a tail pointer for your linked list you can add that data
+    member here as well.
+
+    Create a "linkedlist.cpp" file with implementations for all the methods
+    listed above.
+
+    Since you haven't integrated the LinkedList with your main program yet,
+    there won't be any change to that program. However, you can modify and run
+    testlist.cpp to make sure that your class is working as you expect it
+    to. Make sure to use valgrind to check for memory errors.
+
+Task 5: Implement the Hashtable (2 hr)
+
+    For this task implement the Hashtable class. The Hashtable should have an
+    array data member. This array is an array of LinkedList objects. This
+    array should not have a fixed sized but should be dynamically allocated in
+    the Hashtable constructor.
+
+    Define the following methods in Hashtable:
+
+    - default constructor
+    - destructor
+    - copy constructor, assignment operator (probably can delete)
+    - insert
+    - remove
+    - locate
+    - hash [private]
+
+    Since this class contains dynamically allocated data (the array), you must
+    provide a destructor and also either implement or explicitly delete (with
+    the delete keyword) the copy constructor and assignment operator.
+
+    Decide on a hashing function and implement it. The book offers some
+    options for a hashing function and there are numerous hashing functions
+    described online. Or you can make up your own. The hash function needs to
+    map the Person ID to an integer in the range 0 - array size (9973 in our
+    case). In addition, the hash function needs to "spread the value around"
+    so that you have few collisions.
+    
+    At this point you can implement each of the Hashtable public
+    functions. Notice that implementing each function is not much more than
+    using the hash function to find the array index and then calling the
+    appropriate method on the LinkedList object at that location.
+    
+    After you have implemented all these methods you will be able to modify
+    and run testhashtable.cpp. Make sure you are using valgrind to check for
+    memory errors.
+
+Task 6: Complete the PersonMgr class (2 hr)
+
+    Now you have all the pieces implemented and it's time to integrate it all
+    together. You can do the implementation of addPerson, removePerson, and
+    findPerson by calling the add, remove, and locate methods in the Hashtable
+    class.
+
+    The findPerson() method can be tricky. This method works by calling
+    Hashtable::locate() which calls LinkedList::find(). The tricky part is
+    that findPerson() is supposed to return a pointer to a Person object. You
+    will need to take the address of the actual Person object that is buried
+    in the LinkedList and return that address all the way out to the
+    main(). This means that the Hashtable::locate() and LinkedList::find()
+    methods will have to support that.
+
+    When you have finished implementing the PersonMgr methods you can now
+    compile and run the whole program. If you've done everything correctly up
+    to this point, your output will match.
+
+    You also need to time your runs to make sure that you are able to handle
+    the data fast enough. If your program is too slow then there are a couple
+    things to check. The most likely culprit would be that your hash function
+    is not distributing the keys through the table. With the huge dataset you
+    should find that about 90% of your table slots have values. The second
+    most likely source of slowness would be the way you are handling the
+    linked list inserts. Remember, you don't need to keep the elements in
+    order when inserting into the linked list so you can always just insert
+    new items at the head of the list.
+
+Task 7: Celebrate!!! (? hr)
+
+    You are done!
+    
+================================================================================
+======================================================== Turnin and Extra Credit
+
+You must use the "turnin" program to turn in your assignment. DO NOT USE D2L
+TO TURN IN YOUR ASSIGNMENT. Assignments turned in using D2L will not be
+counted. For information on using the "turnin" program see
+~mike.noel/classes/all/turnin.txt for information on using the "turnin"
+program.
+
+IMPORTANT: If the program fails to compile, crashes, or hangs then the program
+automatically gets a 0.
+
+There is no extra credit available for this assignment.
+
+================================================================================
+=================================================== Note: Reading files from C++
+
+This section is just FYI. You don't need to read this. It is only if you are
+interested in how to avoid having hard-coded char* arrays when reading string
+data in C++ from stdin or a file.
+
+First, in modern production C++ we nearly always use std::string instead of
+char* so this is not so much an issue anymore. Occasionally you will need to
+use char* so it's good to see how to do it.
+
+There are many ways to do this, what I'm showing you here is my approach.
+
+The basic problem is this:
+
+char str[100];
+cin >> str;
+
+What happens if the user enters more than 99 characters? Well, if that happens
+then the str array overflows. This is very common in older C/C++ programs. It
+is called a buffer overflow and is the source of countless hacks in legacy
+software. 
+
+The solution is to never read directly into an array. Instead you can have a
+dynamically allocated char array and fill it in one character at a time. When
+you reach the maximum size for that array, make a new, larger array and copy
+the items into that new array. The following code shows the basic idea (note
+that I have not tried to compile or run this, it is the concept that is
+important).
+
+char* str;
+char ch;
+int curSize = 0;
+int maxSize = 100;
+
+// make a first guess
+str = new char[maxSize];
+cin >> ch;  // This is just ONE character
+while (ch != '/n' && !cin.fail() && !cin.eof()) {
+  str[curSize] = ch;
+  curSize++;
+  if (curSize == maxSize)
+  {
+    // need to make a bigger string
+    maxSize = maxSize * 2;
+    char* newstr[maxSize];
+    strncpy(newstr,str,curSize);
+    delete [] str;
+    str = newstr;
+  }
+  cin >> ch;
+}
+str[curSize] = 0;
+  
+This is just one way to safely read character data into a char[] in C++. Other
+ways may be more efficient or error tolerant but this has long been a tricky
+part of C/C++ code. 
+
+
+
