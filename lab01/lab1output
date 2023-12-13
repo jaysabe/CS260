@@ -1,0 +1,13 @@
+Script started on 2023-09-27 17:29:19-07:00
+]0;jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01 $ g++ -o main main.cpp
+]0;jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01 $ ls
+[0m[01;32mhello[0m  hello.cpp  [01;32mmain[0m  main.cpp  output  readme
+]0;jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01 $ ./main
+Username: jay.abegglen
+Class ID: -1860336897
+]0;jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01 $ eit
+bash: eit: command not found
+]0;jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01jay.abegglen@vmcslinuxprod01:~/cs260/labs/lab01 $ eite[K[K[Kxit
+exit
+
+Script done on 2023-09-27 17:30:38-07:00
