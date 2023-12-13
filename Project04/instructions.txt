@@ -1,0 +1,509 @@
+================================================================================
+========================================================= Overview and Objective 
+
+For this assignment you will write a program that reads in the data for
+planting, harvesting, and pruning plants in an automated food growing
+factory. The program is demonstrating a fast and efficient way of handling a
+large list of plants while also providing a way to traverse the data structure
+in order. You can read background.txt if you want more context for why we are
+doing this. For those who have been following along with the story, there is
+also an epilogue.txt that describes what happens with the colony. I recommend
+reading the epilogue.txt file after you have finished the project.
+
+The objective of this assignment is to learn how to implement and use a
+BST. Since this is the objective, you cannot use a premade BST or any other
+premade data structure. A secondary objective is to become more familiar with
+using char* to represent string data. You cannot use std::string to represent
+the strings.
+
+Your program will be evaluated based on both how it runs as well as how it was
+designed and implemented. Pay attention to the "rubric.txt" file to see how it
+will be evaluated.
+
+Along with these instructions, I have provided datafiles and the EXACT
+expected output that corresponds to those datafiles. It is important that
+your program output matches EXACTLY. This includes spelling, whitespace, and
+punctuation.
+
+The rest of this document provides more details about the assignment. If you
+have any questions, be sure to post in the discussion group or send me
+email. Do not wait until the last minute to start this assignment.
+
+================================================================================
+======================================================================== Details 
+
+The overall situation is that you have a giagantic greenhouse full of planter
+boxes where each box has an id number and contains a single plant of one of
+the supported plant types (corn, soy, etc.). You are providing software that
+makes it easier to manage all the boxes. Your software will support three
+actions that can be applied to a planter box: plant, harvest, prune.
+
+The "plant" operation involves planting the requested plant type in a box. We
+will always assume that the box starts off as empty.
+
+The "harvest" operation involves harvesting food from a box. In order to be
+more efficient, the system always harvests a range of boxes and only a
+specified type of food. Harvesting food does not remove the plant from the
+box.
+
+The "prune" operation removes a plant from the box that it is in.
+
+This simulation is driven by a main function that reads and processes data
+from a datafile. The datafile contains intermixed sections of commands to
+plant, harvest, and prune plants from the system. Just as in previous
+assignments, I have provided this implementation for you.
+
+The main() function, in planters.cpp, interacts only with a class called
+PlanterMgr. It creates an object of that class and then calls plant(),
+harvest(), and prune() in various combinations. While that is the only class
+that main() sees, it is not the only class in the program. The entire program
+will consist of several classes: PlanterMgr, BoxTree, BoxList, and Box.
+
+main() -- this function creates a PlanterMgr and then makes various calls to
+the plant(), harvest(), and prune() methods on that object.
+
+PlanterMgr -- this class is the manager of all the plants in the
+greenhouse. Internally, it has a variant of a binary search tree that it uses
+to store all the boxes of plants. Using a BST allows O(log n) insert and
+remove operations. It also allows us to quickly do in-order traversals.
+
+Box -- this class is a simple container that holds a plant. In our program,
+each box has an id number and the name of the plant that the box contains.
+
+BoxTree -- this class is a variant of a binary search tree that contains Box
+objects. It supports the ability to insert and remove boxes. Also, it supports
+a special traversal method that does an in-order traversal of only a portion
+of the tree.
+
+BoxList -- this class is a linked list that holds Box objects. This is used
+internally when the PlanterMgr asks the BoxTree for a range of Box
+objects. The BoxList has an special feature that allows an outside class to
+iterate over all the nodes in the list without the caller accessing the
+nodes or pointers directly. 
+
+Here is an overview of how the main() function and classes relate to each
+other.
+
+main() 		--- calls methods on ---> 	   PlanterMgr
+PlanterMgr 	--- contains --->    		   BoxTree
+BoxTree 	--- contains --->    		   Box
+Box		--- contains --->		   char* (name of plant)
+
+BoxTree.getRange()   --- returns --->   	   BoxList
+PlanterMgr.harvest() --- calls methods on --->	   BoxList
+
+The following sections provides details about the requirements for the
+assignment.
+
+------------------------------------------------------------------- planters.cpp
+
+The planters.cpp file contains the main application for your program. This
+code is meant to read in commands for the simulation (from the provided
+datafile). The commands can plant, harvest, and prune plants from the
+greenhouse.
+
+The code in planters.cpp interacts with the PlanterMgr only.
+
+You should use the planters.cpp code unchanged.
+
+---------------------------------------------------------------------------- Box
+
+The Box class encapsulates information about a single box. Each Box has a box
+number and is intended to hold a single plant. For the purposes of this
+simulation we only care about the name of the plant. This should be stored as
+a char* in the box class. Since a Box without a plant might make sense in some
+situations (but it doesn't happen in this assignment), it is ok to have a Box
+constructor that takes no arguments. In this case set the box number to 0 and
+the name to the empty string.
+
+------------------------------------------------------------------------ BoxTree
+
+The BoxTree class is a variant of a binary search tree where each node
+contains a Box. The BoxTree should supply the standard BST operations for
+inserting and removing items from the tree. Also, it should provide an
+in-order traversal method that returns, in order, a list of Boxes between two
+numbers. For example:
+
+  BoxTree bt;
+  // code to insert stuff....
+  BoxList bl = bt.getRange(203,515);
+
+The call to getRange() here would return a BoxList (linked list) that contains
+all the boxes in the tree starting with box 203 and ending with box 515
+(including those numbers). It is important to note that this traversal must
+not traverse the entire tree. It must traverse just the part of the tree in
+the given range.
+
+Also note that while a BoxTree holds Box objects, it doesn't really know what
+is in a Box. It knows it has a number but other than that, the rest of the
+data in a Box is irrelevant to the BoxTree. This should be reflected in the
+BoxTree API. For example, the insert() method should accept a fully created
+Box object rather than an int for the ID and a char* for the plant name.
+
+------------------------------------------------------------------------ BoxList
+
+The BoxList class is essentially a linked list that holds Box objects. As a
+linked list it supports the customary add, remove, and search operations. It
+also has a feature built in that lets caller code iterate over all the nodes
+without the caller actually using the node struct or pointers. This is done by
+providing three additional methods:
+
+    void startIterating();	  
+    const Box& getNextBox();
+    bool hasNextBox();
+
+From a caller point of view, these methods are used like this:
+
+    BoxList bl;  // we get this from somewhere
+    bl.startIterating();
+    while (bl.hasNextBox()) {
+      const Box& box = bl.getNextBox();
+      cout << box.getPlantName() << endl;
+    }
+
+The way that this works is that the BoxList class has a data member called
+mCurrent that is a pointer to a node. This member is used to point to the
+"next" Box object. When someone calls startIterating(), the mCurrent pointer
+is set to head. When someone calls hasNextBox(), the method returns true if
+mCurrent is non-null, false otherwise. When someone calls getNextBox(), the
+method returns the Box in the node that mCurrent is pointing to and then moves
+mCurrent to the next node. It is an error if the calling code calls
+getNextBox() when mCurrent is nullptr.
+
+--------------------------------------------------------------------- PlanterMgr
+
+The PlanterMgr class manages all the planter boxes in the system. It has three
+public methods: plant(), harvest(), and prune(). The PlanterMgr class uses a
+BoxTree object to store all the planter boxes. Implementation of each of the
+public methods is fairly straight-forward.
+
+The plant() method accepts a box number and a plant name. It then creates a
+Box object with that data and calls the BoxTree::insert() method. It prints a
+message indicating that the plant was planted.
+
+The harvest() method is the trickiest. This method accepts a range of box
+numbers and the name of a plant. It first calls BoxTree::getRange() with the
+start and stop numbers. That method call returns a BoxList of zero or more
+nodes. Then the harvest() method uses the BoxList iteration methods (see the
+BoxList description) to iterate over the returned list. For each Box, it
+checks to see if that Box plant name matches the one passed to harvest(). If
+so, then it prints a message that that plant is being harvested.
+
+In doing the harvest iteration it is important that the PlanterMgr class does
+not know anything about the nodes in either the BoxTree or the BoxList. It
+only uses the public API of each of those classes to do what needs to be done.
+
+The prune() method accepts a box number. It calls BoxTree::remove() with that
+box number. It prints a message indicating that the plant was pruned.
+
+-------------------------------------------------------------------- Other Files
+
+I have provided test programs as well. These test programs will most likely
+not work with your classes out-of-the-box. I only provide them to give you a
+rough example of how you can write small test programs for your classes.
+
+You are not required to use the test programs but I highly recommend it. You
+should not turn in the test programs. I will not evaluate or grade them.
+
+---------------------------------------------------------------------- DataFiles
+
+The datafiles for this project are more complex than in the previous
+projects. Each datafile has multiple sections. Each section is marked with
+"start_section" and "end_section". The data within the section is different
+for each type of section. There are three types of sections: planting,
+harvesting, pruning.
+
+The planting section looks like this:
+
+start_planting
+92741 corn
+62642 soy
+end_planting
+
+This plants corn in box 92741 and soy in box 62642. 
+
+The harvesting section looks like this:
+
+start_harvest
+chive 48223 58268
+lettuce 10112 37192
+end_harvest
+
+This harvests all chive plants between 48223 and 58268, if any. It also
+harvests all lettuce plants between 10112 and 37192, if any.
+
+The pruning section looks like this:
+
+start_pruning
+91270
+42987
+end_pruning
+
+This prunes the plant in box 91270 and 42987 (that is, it removes them from
+the BST).
+
+Each section can have any number of entries. There can be multiple instances
+of each section in the datafile. The box numbers in each section are not in
+numerical order.
+
+This datafile format is handled properly by the provided planters.cpp
+file. If you want to make your own datafiles, you will need to follow this
+format.
+
+================================================================================
+========================================================================== Tasks
+
+In this section I outline the sequence of tasks that you should follow to
+complete this project. After each task (except the first one) you should be
+able to compile and run your program. Also, at each task step, you should use
+valgrind to make sure that you don't have any memory errors or leaks.
+
+To help you pace yourself, I've added estimates of about how long I think each
+of these tasks takes an average student.
+
+Task 1: Read and Understand (1 hr)
+
+    The primary objective of this task is to gain a full understanding of the
+    assignment requirements.
+    
+    Read (and understand) each of the documents in this assignment:
+
+    - instructions.txt (this document)
+    - background.txt
+    - rubric.txt
+
+    Read the "planters.cpp" file to see how it works.
+
+    Examine medium.txt to see what the data is like in the datafile and
+    medium.txt.out to familiarize yourself with the output format.
+
+Task 2: Create the PlanterMgr class stub (1 hr)
+
+    The primary objective of this task is to get the main program to build. It
+    won't do anything yet but it will provide a foundation for building on.
+     
+    Create a new class for PlanterMgr using the details for this class as
+    described above. Don't create complete implementations of each of the
+    methods, only create stub implementations. Since you haven't created the
+    BoxTree class yet, you can't add that data member to the class.
+
+    You should be able to compile the whole program without errors. If you run
+    the program with one of the datafiles it will not do anything useful but
+    you can do this anyway to make sure that there aren't any memory errors or
+    leaks.
+
+Task 3: Create the Box class (1 hr)
+
+    The objective of this task is to create the Box class. This is the
+    fundamental unit of data that the program deals with.
+    
+    Create a new class (separate header and implementation files) for Box. The
+    details for this class are described above. Since this class contains
+    pointer data, you will have to provide a destructor. You will also have to
+    implement or delete (using the delete keyword) the copy constructor and
+    assignment operator.
+
+    At this point you can still compile the entire program but it still won't
+    do much. This would be a good time to modify and use testbox.cpp.
+
+Task 4: Create the BoxTree class with stubs only (2 hr)
+
+    The objective of this class is to build a placeholder BST that will hold
+    Box objects.
+    
+    Create a BoxTree class definition with the following methods in the
+    header file:
+
+    - default constructor
+    - copy constructor (possibly deleted)
+    - destructor 
+    - operator= (possibly deleted)
+    - insert
+    - remove
+    - getRange
+
+    Define the node struct or class for your BoxTree so that it has three data
+    members: a Box data object (or a pointer to a Box, your choice) and
+    left/right child pointers
+
+    Define the root for your BoxTree class:
+
+      Node* root
+
+    Create a "boxtree.cpp" file with an implementation for default
+    constructor, destructor and stub implementations of each of the other
+    methods.
+
+    Add a BoxTree data member to PlanterMgr. You will have to add the
+    appropriate #include statement to plantermgr.cpp.
+
+    You can compile the entire program but it still won't do much yet. You
+    have most of the scaffolding in place but there's not much functionality
+    implemented.
+
+    If you are using the test programs, you should modify the testboxtree.cpp
+    file to match your class and compile and run that.
+    
+    Use valgrind to check for memory errors and memory leaks. Make sure that
+    you don't have any before moving on to the next tasks.
+
+Task 5: Implement the BoxTree::insert method (2 hr)
+
+    The objective of this task is to add the insert functionality to the
+    BoxTree and integrate that with the PlanterMgr::plant() method.
+    
+    Implement the BoxTree::insert method using the techniques that you've
+    learned for inserting a node into a binary search tree. The BoxTree holds
+    Box objects but it doesn't know what is in a Box other than the number
+    (which is uses for ordering). The insert() method should take the Box
+    object as an argument instead of the plant name and box number.
+        
+    If you're using the test program. Update it to make calls to
+    BoxTree::insert().
+    
+    Now that you have insert working, update PersonMgr::plant() to print the
+    correct message, create a Box object for the plant, and insert the new Box
+    into the tree.
+
+    Your program should produce all the correct output for the planting
+    messages now. You should make sure that it runs without any memory errors
+    or leaks before moving on to the next task.
+
+Task 6: Implement the BoxTree::remove method (2 hr)
+
+    The objective of this task is to add the remove functionality to the
+    BoxTree and integrate that with the PlanterMgr::prune() method.
+    
+    Implement the BoxTree::remove method using the techniques that you've
+    learned for removing a node from a binary search tree.
+
+    If you're using the test program. Update it to make calls to
+    BoxTree::remove().
+    
+    Now that you have remove working, update PersonMgr::prune() to print the
+    correct message and remove the box from the tree.
+
+    Your program should produce all the correct output for the planting and
+    pruning messages now. You should make sure that it runs without any memory
+    errors or leaks.
+
+Task 7: Implement the BoxList (2 hr)
+
+    The objective of this task is to implement the BoxList class.
+
+    The BoxList class is simply a LinkedList that holds Box objects plus a few
+    methods that allow client code to iterate over the list without explicitly
+    accessing the internal nodes or pointers.
+
+    Start by implementing a standard LinkedList with the insertAtTail method
+    and the destructor. There is no need for any other insertion or removal
+    methods.
+
+    Normally, you can delete the copy constructor and assignment operator for
+    a LinkedList but that won't work for this. The BoxTree::getRange() method
+    (see the next task) returns a BoxList object by value and this requires a
+    copy. This means that you will need to implement the BoxList copy
+    constructor. You can delete the assignment operator (unless you add other
+    code in your implementation that requires it).
+
+    Reread the description of the BoxList class in the Details section of the
+    assignment to remind yourself about the "iteration methods". In order to
+    implement these the BoxList needs an extra data member, mCurrent, that is
+    a pointer to a node in the list. This pointer is "the next value to give
+    to the caller".
+
+    Implement startIterating() so that it sets that pointer to head.
+
+    Implement getNextBox() so that if that pointer is not nullptr, the Box
+    object (or a const pointer to it) in that node is returned.
+    
+    Implement hasNextBox() so that if mCurrent is nullptr, it returns
+    false. Otherwise it returns true.
+
+    After completing this implementation, you should be able to compile and
+    run your main program. It doesn't use the BoxList yet so there shouldn't
+    be any change.
+
+Task 8: Implement the BoxTree::getRange method (4 hr)
+
+    The objective of this task is to add the getRange functionality to the
+    BoxTree method.
+    
+    Implement the BoxTree::getRange method. The public method for getRange()
+    should accept a starting box number and an ending box number. It should
+    return a BoxList object. That is, the method signature in BoxTree should
+    be:
+
+      BoxList getRange(const int start,const int stop);
+
+    The getRange() method is a variant of an in-order traversal. The idea is
+    to access the nodes in the tree, in order, but only from the starting box
+    number to the ending box number (including the end numbers). While
+    traversing over the range, the getRange() method adds the Box in each node
+    traversed to the end of the BoxList. When the traversal is done, the
+    BoxList object should contain a list of all the Box objects in order. This
+    BoxList object should be returned.
+
+    Since tree traversal algorithms are usually recursive, they usually accept
+    the "root" as one of the arguments. As described in the book, this doesn't
+    make sense for a public method since callers of the method don't have
+    access to the tree's root. The common technique is to have a public
+    non-recursive method that just calls an internal (private) recursive
+    method and passes in the root.
+
+    For the getRange() method you will use this technique. In addition, your
+    getRange() method will need to create a BoxList object and pass that as an
+    argument to the internal recursive traversal algorithm. The internal
+    recursive algorithm needs this BoxList argument so that it can add the
+    nodes to it.
+    
+    It is very important that the traversal only looks at the fewest nodes as
+    possible. That is, it should NOT traverse the whole tree. It should limit
+    the traversal to just the specified range.
+
+    After you implement getRange(), you should be able to compile your whole
+    program and run it. At this point you haven't made any calls from
+    PlanterMgr to getRange() -- that is the next task -- so there shouldn't be
+    any change in the overall program behavior.
+
+Task 9: Integrate getRange() with PlanterMgr::harvest() (2 hr)
+
+    The objective of this task is to implement the harvest method using the
+    BoxTree::getRange() method.
+
+    The BoxTree::getRange() method returns a BoxList object. The BoxList class
+    provides three methods for iterating over the Box objects that it
+    contains. See the description of BoxList for details about these
+    methods.
+
+    Implement the PlanterMgr::harvest() method by calling BoxTree::getRange()
+    to get a BoxList of the Box objects that might be harvested. Next, use the
+    BoxList methods to traverse the list and for each Box that has a matching
+    plant name, print an appropriate message.
+
+    All the functionality for your program should be complete now. Make sure
+    that you can run it against all the provided datafiles and that the
+    generated output matches the provided output files exactly.
+
+    Also ensure that valgrind doesn't show any memory errors or leaks.
+
+    Finally, review the rubric.txt file to make sure that all of requirements
+    are met.
+
+Task 10: Final check (? hr)
+
+    You are done!
+    
+================================================================================
+======================================================== Turnin and Extra Credit
+
+You must use the "turnin" program to turn in your assignment. DO NOT USE D2L
+TO TURN IN YOUR ASSIGNMENT. Assignments turned in using D2L will not be
+counted. For information on using the "turnin" program see
+~mike.noel/classes/all/turnin.txt for information on using the "turnin"
+program.
+
+IMPORTANT: If the program fails to compile, crashes, or hangs then the program
+automatically gets a 0.
+
+There is no extra credit available for this assignment.
