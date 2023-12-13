@@ -1,0 +1,490 @@
+================================================================================
+========================================================= Overview and Objective 
+
+For this assignment you will write a program that implements the functionality
+for a fictional machine on Mars called a builder. When your program runs, each
+builder will receive commands and will build structures. The "background.txt"
+file gives a very short story (~1100 words) that provides some context for how
+these builders are going to be used. Reading the story is optional but it does
+provide context for the assignment that makes it a bit easier to understand
+and more fun to do. More specific details are provided below.
+
+The objective of this assignment is to learn how to implement a stack and get
+more practice with linked lists. Each of your builder objects will contain a
+stack and a linked list. 
+
+Stacks are very useful and frequently used data structures. There is not much
+variation in how they are implemented (i.e., they almost always have the same
+set of methods) but there is much variety in how they are used. The stack
+implementation you will create for this program is quite standard.
+
+Since the objectives include learning how to implement a stack and practicing
+a linked list, you cannot use a premade stack or linked list (e.g. the STL
+stack or list classes).
+
+Your program will be evaluated based on both how it runs as well as how it was
+designed and coded. Pay attention to the "rubric.txt" file to see how it will
+be evaluated.
+
+Along with these instructions, I have provided data files and the EXACT
+expected output that corresponds to those data files. It is important that
+your program output matches EXACTLY. This includes spelling, whitespace, and
+punctuation. Fortunately, on a linux system it is very easy to check the
+output and see that it matches exactly as required. See the file
+~mike.noel/classes/all/checking_output.txt for information about how to do this.
+
+The rest of this document provides more details about the assignment. It is
+important that you read and understand this entire document before beginning
+the assignment. If you have any questions, be sure to post in the discussion
+group or send me email. Do not wait until the last minute to start this
+assignment.
+
+================================================================================
+======================================================================== Details 
+
+The central concept for this program is a builder. A builder is a factory on
+wheels that can travel across the surface of Mars and build one of three types
+of structures: wind turbine, solar collector, or water harvester. Also,
+builders are capable of connecting the buildings that they build so that all
+the energy or water can be transported back to the base station. Since our
+program is a simulation, we aren't actually going to be building
+anything. Instead, we will pretend to build by printing out infomation that
+says what we're doing.
+
+The main loop of the program sends building requests to builders and allows
+builders time to build the required structures. There are more details in the
+Builders.cpp section below.
+
+The program itself can handle any number of builders and any number of
+requests to build things at various locations. All this data is provided in
+the datafile that the program runs on.
+
+Structurally, the program consists of the following main() function and classes:
+
+main() -- this function creates an array of builders, sends building requests
+to the builders, lets them do work, and tells them when to come home.
+
+Builder -- this class represents a single builder. It knows how to receive
+requests, move to a location, build a structure, and return to home.
+
+Stack -- this class is used by the builder to keep track of where it has
+been. This is needed to that the builder can retrace its steps to get back
+home.
+
+LinkedList -- this class is used by the builder to keep track of incoming
+requests. This list is used by the builder to ensure that it builds things in
+a first-come-first-served order.
+
+Request -- this class contains the data for a single request. That is, it
+contains the sector where the structure should be built and the type of
+structure to be built.
+
+Here is an overview of how the main() function and classes relate to each
+other.
+
+main() 		--- calls methods on ---> 	   Builder
+Builder 	--- contains --->    		   Stack
+Builder 	--- contains --->    		   LinkedList
+LinkedList 	--- contains ---> 		   Request
+Stack		--- contains ---> 		   Request
+
+The following sections provides details about the requirements for the
+assignment.
+
+------------------------------------------------------------------- Builders.cpp
+
+The builders.cpp file (I provide this) runs the main() function for the
+program. After setting up an array of builders, the main loop repeatedly goes
+through two phases: dispatch and work. After all the work is done, the main()
+function sends the command to each builder to have it return home.
+
+During the dispatch phase, the main loop reads building requests from a
+datafile and sends those requests to the appropriate builder. The dispatch
+phase only reads a certain number of requests from the datafile every main
+loop iteration. Each builder is not guaranteed to get a new request in every
+cycle. On the other hand, a given builder may receive more than one request in
+a cycle.
+
+During the work phase, the main loop gives each builder a chance to build one
+item from its own work list. If the builder has no requests in its list of
+pending requests then it does no work that cycle. If there are two or more
+requests in the list, the builder still only processes one request. That means
+that there will be requests left over for the next cycle for that builder.
+
+The main loop keeps iterating until there are no more building requests (i.e.,
+we've reached the end of the datafile) AND all the builder objects have
+finished processing all their pending requests.
+
+After the loop ends, the main program sends each builder the command to return
+back to the base.
+
+The builders.cpp file is fully commented and you should read through the file
+to get a clear understanding of how the main program works so that you will
+better understand how to interface your classes to that code.
+
+------------------------------------------------------------------------ Builder
+
+Each builder receives commands to build certain structures in certain
+sectors. You can imagine that these commands are being sent wirelessly from
+the base station to the builder while it is in the field. The builder receives
+commands via the addRequest() method. A builder may receive several requests
+during a single cycle but they can only build one request per cycle. This
+means that the builder will build up a backlog of requests. During the work
+phase, these requests should be processed in a first-come-first-served
+order. To handle this, each builder should have a linked list for storing the
+incoming requests. When a new request arrives, it should be placed at the
+front of the linked list.
+
+Whenever the builder receives a request it should print out a message in the
+following format:
+
+Builder #5: Received request to build a solar energy collector in sector 21
+
+As described above, each builder also is given a chance, once per main loop
+iteration in builders.cpp, to do some work. The main loop calls doCycle() on
+each builder object. When doCycle() is called, the builder must process the
+oldest request and create that structure. Note that since all requests are
+added to the front of the list, the oldest request is at the back of the list
+so the builder should remove items from the back of the list.
+
+Each request indicates a sector and building type. The builder itself will
+already be in a sector. If the structure is to be created in the same sector
+where the builder already is, then it will just build it. Your program should
+simulate building a structure by printing a message as follows:
+
+Builder #2: Building a water harvester in sector 25
+
+If the request is for a sector that is not where the builder currently is,
+then the builder must travel to the new sector and then build the
+structure. It can both move and build in the same doWork() cycle. When this
+happens, your program should print two messages:
+
+Builder #2: Moving to sector 25
+Builder #2: Building a water harvester in sector 25
+
+When doCycle() is called, it is possible that there are no pending requests
+for a builder (that is, the linked list is empty). In that case the builder
+should do nothing. The doCycle() method should return 'true' if any structures
+were built and 'false' otherwise. This return value is used by the main
+program to determine when all builders are done doing work.
+
+Finally, when the main program has determined that all work is complete, it
+will request each builder to return home by calling the returnHome()
+method. When this happens, the builder should backtrack through the list of
+structures that it built in reverse order. The builder is connecting the
+structures together so that the water or energy that the structure harvests is
+delivered to the base station. While returning the builder should print
+messages to the screen as follows:
+
+Builder #1: Connected to water harvester in sector 50
+Builder #1: Connected to water harvester in sector 50
+Builder #1: Moving to sector 10
+Builder #1: Connected to solar energy collector in sector 10
+Builder #1: Moving to sector 23
+Builder #1: Connected to wind turbine in sector 23
+
+See the output in the provided output files for the exact messages for
+receiving requests, building structures, and returning to home.
+
+Also note that each builder has a builder number that is printed out when it
+outputs a message. This requires that each builder has a data member that
+stores it's number. The main() method calls setBuilderNum() on each builder
+object during an initialization loop. You need to add this data member and
+method to the Builder class.
+
+--------------------------------------------------------------------- LinkedList
+
+As mentioned several times above, each builder will need a linked list to keep
+track of incoming requests. You are free to use either a singly-linked or a
+doubly-linked list and with or without a tail pointer. Any of those types
+would work. The data in the linked list should be a Request object (see
+below). The linkedlist needs to support the ability to insert items at one end
+of the list and remove them from the other end.
+
+-------------------------------------------------------------------------- Stack
+
+Each builder will need a stack to keep track of the Requests that have been
+processed. The stack must be implemented as a linked list. The data in the
+stack will be Request objects (see below). The stack should support the
+standard stack operations: isEmpty(), push(), pop().
+
+Notice that the stack needs a linked list that can hold Request objects. That
+is exactly what the LinkedList class described above does. Therefore, it makes
+sense to use this LinkedList as a data member for the stack class. 
+
+-------------------------------------------------------------------------Request
+
+Every request indicates a sector where a structure is to be built and the type
+of structure to be built. Your program will need to track this information in
+a various ways so it makes sense to bundle these peices of data into a single
+object. This is the Request object. It is a simple wrapper that contains the
+sector and building type together.
+
+----------------------------------------------------------------- structure_type
+
+I have provided two files, structuretype.h/cpp, that define an enumerated type
+(enum) for the different structure types. Along with the basic enum, I provide
+some convenience methods for converting between strings and enum values. See
+the comments in structuretype.h for a description of each function. You can
+look in structuretype.cpp to see the exact strings that are associated with
+each enum token.
+
+-------------------------------------------------------------------- Other Files
+
+I have provided two test programs: teststack.cpp and testlist.cpp. These
+are for your use. You are not required to use them but they will be helpful
+for developing and debugging your stack and linkedlist classes. Each of these
+small test programs creates the associated data structure and tries a few
+insert and removes from the structure. These are useful for making sure that
+your data structure is working correctly before you integrate it with your
+whole program.
+
+The teststack.cpp and testlist.cpp files are setup for my testing (using
+my class names and method names) and you will likely need to update them to
+work with your classes. They are provided just to give you a headstart with
+testing.
+
+Again, you are not required to use the test programs but I highly recommend
+it. However, you should not turn in the test programs. I will not evaluate or
+grade them.
+
+================================================================================
+========================================================================== Tasks
+
+In this section I outline the sequence of tasks that you should do to complete
+this project. After each task (except the first one) you should be able to
+compile and run your program. Also, at each task step, you should use valgrind
+to make sure that you don't have any memory errors or leaks.
+
+To help you pace yourself, I've added estimates of about how long I think each
+of these tasks takes an average student.
+
+Task 1: Read and Understand (1 hr)
+
+    You should read (and understand) each of the documents in this assignment:
+
+    - instructions.txt (this document)
+    - background.txt
+    - rubric.txt
+
+    Next, you should read the "builders.cpp" file. There are many comments in
+    that file that explain how the main() code works.
+
+    Next, you should examine medium.txt to see what the data is like in the
+    datafile.
+
+    Finally, you should look at medium.txt.out to familiarize yourself with
+    the output format.
+
+Task 2: create the Request class (1 hr)
+
+    Create a new class (separate header and implementation files) for
+    Reqeust. The details for this class are described above.
+
+    You aren't using the Reqeust class anywhere yet so your program should
+    still compile and run.
+
+Task 3: create the LinkedList class (3 hr)
+
+    Create a LinkedList class definition with the following methods in the
+    header file (not implemented yet):
+
+    - default constructor
+    - copy constructor
+    - destructor
+    - operator=
+    - addFront
+    - addBack
+    - removeFront
+    - removeBack
+
+    Define the node for your LinkedList so that it has two data members: a
+    Request data object and a next pointer.
+
+    Define the head and count for your LinkedList class with two data members:
+    - Node* head
+    - int count
+
+    If you are using a tail pointer for your linked list you can add that data
+    member here as well.
+
+    Create a "linkedlist.cpp" file with implementations for all the methods
+    listed above.
+
+    Optional: At this point you should be able to compile the
+    "testlist.cpp" file with your linked list and test each of the
+    methods. You may have to edit "testlist.cpp" file to match the exact
+    names of your types, methods, and files. This test file is just for your
+    benefit so that you can make sure that your linked list is working
+    correctly before you try to use it in the builder. You should not turn
+    "testlist.cpp" in when you turn in your assignment.
+
+    Make sure that you run valgrind after you complete this task to see that
+    you don't have any memory leaks or errors in your LinkedList
+    implementation.
+
+Task 4: Implement the Stack (2 hr)
+
+    For this task implement the Stack class that can hold Request objects. The
+    stack class should have just one data member and that is a LinkedList. The
+    Stack class should have the following methods:
+
+    - default constructor
+    - isEmpty
+    - push
+    - pop
+    - peek (see note below)
+
+    Notice that since this class doesn't have any pointer data members, there
+    is no need for the copy constructor, destructor, or operator=.
+
+    You should implement the isEmpty(), push(), pop() and peek() methods by
+    simply calling the appropriate methods on your LinkedList class.
+
+    A quick note on the peek() method. There are two common ways to implement
+    pop(). One way just removes the element from the top of the stack and
+    throws it away. Another way removes the element from the top of the stack
+    and returns it. If you choose to implement pop() the second way, there is
+    no need for a peek() method. However, if you choose to implement pop() the
+    first way, you will need a peek() method in order to see the top item on
+    your stack.
+
+    Optional: At this point you should be able to compile the "teststack.cpp"
+    file with your stack and test each of the methods. You may have to edit
+    "teststack.cpp" file to match the exact names of your types, methods, and
+    files. This test file is just for your benefit so that you can make sure
+    that your stack is working correctly before you try to use it in the
+    builder. You should not turn "teststack.cpp" in when you turn in your
+    assignment.
+
+    Make sure that you run valgrind after you complete this task to see that
+    you don't have any memory leaks or errors in your Stack implementation.
+
+Task 5: Initial Builder class (approximately 1 hr)
+
+    The goal of this task is to create enough of the Builder class
+    implementation that we can get a basic "shell" of the program to compile
+    and run. This shell won't do anything but it gives us a solid foundation
+    to add on to.
+
+    First try to compile the program using the files "as is" from the
+    assignment. Use the command:
+
+        g++ -o runbuilders -g builders.cpp structuretype.cpp
+
+    You will get an error telling you that "builder.h" is missing. Create a
+    new file "builder.h" and put an initial class definition for Builder
+    in that file. This class doesn't need any data members yet. Add all the
+    required methods to the class definition. Create "builder.cpp" and add
+    an empty implementation for each of the methods. After creating the files
+    your compilation command will need to include "builder.cpp":
+
+        g++ -o runbuilders -g builders.cpp structuretype.cpp builder.cpp
+
+    When you have completed this correctly then you will be able to compile
+    and run your program. It won't do much yet.
+
+    Make sure that you run valgrind after you complete this task to see that
+    you haven't introduced any memory leaks or errors.
+
+Task 6: Implement Builder::addRequest() (2 hr)
+
+    Now can use the LinkedList that you built earlier to implement the
+    addRequest() method in your builder. You will need to add a LinkedList
+    data member to the Builder class definition. You will implement addRequest
+    by making appropriate calls to the add and remove methods in your
+    LinkedList. The addRequest() methd should print messages to the
+    screen. Examine the output files to see the format and contents of those
+    messages and implement your code to match that.
+
+    Once this is implemented you can run your program and check the output you
+    generate against the expected output. You should be able to match the text
+    for the add request messages exactly.
+
+    Make sure that you run valgrind after you complete this task to see that
+    you haven't added any memory leaks or errors.
+
+Task 7: Implement Builder::doCycle() (2 hr)
+
+    This task implements the doCycle() method in the Builder class. Recall
+    that the main() function will call doCycle() once per iteration. The
+    Builder is permitted to process one request from its list. If there are no
+    requests to process (i.e., the list is empty), then the doCycle() method
+    should return "false". In all other cases, it should return "true".
+
+    Assuming that there is at least one request in the list, doing work
+    requires several steps:
+
+    1. get the oldest request from the list (this removes it from the list)
+    2. compare the location of the request to the builder's current location
+    3. if the locations are different, move the builder (and update the
+       current location)
+    4. build the requested structure
+    5. save the request on a stack so that we can backtrack at the end
+
+    In order to do all these steps you will need to add a couple data members
+    to the Builder class. You will need an integer for the current sector and
+    you will need a Stack object. Neither of these needs to be pointers.
+
+    Once you have those in place, you can implement the steps listed
+    above. Notice that both moving and building require printing messages to
+    the screen.
+
+    When all this is done, you can compile and run your program. The output
+    should match exactly the expected output in all the data files for
+    everything except the "return to home" part.
+
+    Make sure that you run valgrind after you complete this task to see that
+    you haven't added any memory leaks or errors.
+
+Task 8: Implement Builder::returnHome() (1 hr)
+
+    The final thing that the main() function does is call returnHome() on each
+    builder. When this is called on a builder, it should use its stack object
+    to return to each of the previous requests, in reverse order, and connect
+    up the structures that were built. It will repeat these steps until it
+    gets back to the base. The basic algorithm is:
+
+    1. pop a request from the stack
+    2. if the location is different, move to the new location
+    3. print the "connecting" message
+
+    The builder will repeat these three steps until it has returned to the
+    base.
+
+    After you have implemented this, you will have completed the project. You
+    should be able to run the program with any of the data files and compare
+    the output to any of the *.out files and get a 100% match.
+
+    Make sure that you run valgrind after you complete this task to see that
+    you haven't added any memory leaks or errors.
+
+Task 9: Celebrate!!! (? hr)
+
+    You are done!
+    
+================================================================================
+======================================================== Turnin and Extra Credit
+
+You must use the "turnin" program to turn in your assignment. DO NOT USE D2L
+TO TURN IN YOUR ASSIGNMENT. Assignments turned in using D2L will not be
+counted. For information on using the "turnin" program see
+~mike.noel/classes/all/turnin.txt for information on using the "turnin"
+program.
+
+IMPORTANT: If the program fails to compile, crashes, or hangs then the program
+automatically gets a 0.
+
+It is possible to earn 1 point of extra credit for this assignment. In order
+to earn the extra credit point you need to implement a buildermgr class that
+works with extra_builders.cpp. The buildermgr takes some of the functionality
+that is in builders.cpp and encapsulates it in a "builder manager". You will
+need to study extra_builders.cpp to see what the interface should be. Note
+that doing the extra credit should be IN ADDITION to doing the basic
+program. Even after doing the extra credit, your main program (using
+builders.cpp) should still work correctly.
+
+The extra credit point will give you 1 extra point on this assignment only. It
+will not allow you to exceed to maximum points for the assignment.
+
+
