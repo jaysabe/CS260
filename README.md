@@ -14,7 +14,7 @@ Fall Term 2023
 | Project                    | Date         | Grade                |
 | -------------------------- | ------------ | -------------------- |
 | [Project01](./ProjectA01/) | Oct 2, 2023  | 3.2 / 4.0 - Meets    |
-| [Project](./Project02/)    | OCt 29, 2023 | 4.0 / 4.0 - Exceeds  |
+| [Project02](./Project02/)    | OCt 29, 2023 | 4.0 / 4.0 - Exceeds  |
 | [Project03](./Project03/)  | Nov 16, 2023 | 4.0 / 4.0 - Exceeds  |
 | [Project04](./Project04/)  | Dec 10, 2023 | 4.0 / 4.0 - Exceeds  |
 
